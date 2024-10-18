@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Campus App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #000000;
+            --secondary-color: #87CEEB;
+            --background-color: #f0f0f0;
+            --text-color: #333;
+            --card-background: #ffffff;
+            --accent-color: #A9A9A9;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        #app {
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: var(--card-background);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(135,206,235,0.2) 0%, rgba(135,206,235,0) 70%);
+            animation: pulse 4s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--card-background);
+            padding: 0.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+        }
+
+        .nav button {
+            background-color: transparent;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0.5rem 0.8rem;
+            transition: all 0.3s ease;
+            border-radius: 20px;
+            margin: 0.25rem;
+            flex: 1 0 auto;
+        }
+
+        .nav button:hover, .nav button.active {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .content {
+            padding: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #map {
+            height: 400px;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .event-item {
+            background-color: var(--card-background);
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .event-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .training-module {
+            background-color: var(--card-background);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .training-module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile {
+            text-align: center;
+            padding: 2rem;
+            background-color: var(--card-background);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            border: 4px solid var(--secondary-color);
+            transition: transform 0.3s ease;
+        }
+
+        .profile img:hover {
+            transform: scale(1.1);
+        }
+
+        .btn {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .create-form {
+            background-color: var(--card-background);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .create-form input, .create-form select, .create-form textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+        }
+
+        .social-post {
+            background-color: var(--card-background);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .promo-item {
+            background-color: var(--card-background);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .promo-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right: 1rem;
+            border-radius: 5px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 2rem;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .ticker {
+            overflow: hidden;
+            background-color: var(--primary-color);
+            padding: 10px 0;
+            white-space: nowrap;
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+        }
+
+        .ticker-item {
+            display: inline-block;
+            padding: 0 20px;
+        }
+
+        .ticker-item img {
+            height: 30px;
+            vertical-align: middle;
+        }
+
+        @keyframes ticker {
+            0% { transform: translate3d(100%, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        @media (max-width: 600px) {
+            .nav {
+                flex-wrap: wrap;
+            }
+            .nav button {
+                flex: 1 0 30%;
+                margin: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function Modal({ isOpen, onClose, children }) {
+            if (!isOpen) return null;
+            return (
+                <div className="modal">
+                    <div className="modal-content">
+                        <span className="close-modal" onClick={onClose}>&times;</span>
+                        {children}
+                    </div>
+                </div>
+            );
+        }
+
+        function EventItem({ event, onJoin }) {
+            const [modalOpen, setModalOpen] = useState(false);
+
+            return (
+                <li className="event-item">
+                    <h3>{event.name}</h3>
+                    <p><i className="fas fa-map-marker-alt"></i> {event.location}</p>
+                    <p><i className="far fa-clock"></i> {event.time}</p>
+                    <button className="btn" onClick={() => setModalOpen(true)}>View Details</button>
+                    <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+                        <h2>{event.name}</h2>
+                        <p><strong>Location:</strong> {event.location}</p>
+                        <p><strong>Time:</strong> {event.time}</p>
+                        <p><strong>Description:</strong> {event.description}</p>
+                        <p><strong>Participants:</strong> {event.participants}</p>
+                        <button className="btn" onClick={() => { onJoin(event.id); setModalOpen(false); }}>Join Event</button>
+                    </Modal>
+                </li>
+            );
+        }
+
+        function TrainingModule({ module, onStart }) {
+            const [modalOpen, setModalOpen] = useState(false);
+
+            return (
+                <div className="training-module">
+                    <h3>{module.title}</h3>
+                    <p>{module.description}</p>
+                    <p><i className="fas fa-calendar-alt"></i> Duration: {module.duration}</p>
+                    <p><i className="fas fa-signal"></i> Difficulty: {module.difficulty}</p>
+                    <button className="btn" onClick={() => setModalOpen(true)}>View Details</button>
+                    <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+                        <h2>{module.title}</h2>
+                        <p><strong>Description:</strong> {module.description}</p>
+                        <p><strong>Duration:</strong> {module.duration}</p>
+                        <p><strong>Difficulty:</strong> {module.difficulty}</p>
+                        <p><strong>Equipment needed:</strong> {module.equipment}</p>
+                        <p><strong>Calories burned:</strong> {module.calories}</p>
+                        <button className="btn" onClick={() => { onStart(module.id); setModalOpen(false); }}>Start Now</button>
+                    </Modal>
+                </div>
+            );
+        }
+
+        function CreateForm({ onCreate }) {
+            const [formData, setFormData] = useState({
+                type: '',
+                title: '',
+                location: '',
+                datetime: '',
+                description: ''
+            });
+
+            const handleChange = (e) => {
+                setFormData({ ...formData, [e.target.name]: e.target.value });
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onCreate(formData);
+                setFormData({ type: '', title: '', location: '', datetime: '', description: '' });
+            };
+
+            return (
+                <form className="create-form" onSubmit={handleSubmit}>
+                    <select name="type" value={formData.type} onChange={handleChange} required>
+                        <option value="">Select type</option>
+                        <option value="game">Game</option>
+                        <option value="event">Event</option>
+                        <option value="training">Training Session</option>
+                    </select>
+                    <input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
+                    <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="Location" required />
+                    <input type="datetime-local" name="datetime" value={formData.datetime} onChange={handleChange} required />
+                    <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required></textarea>
+                    <button className="btn" type="submit">Create</button>
+                </form>
+            );
+        }
+
+        function SocialPost({ post, onLike, onComment }) {
+            const [modalOpen, setModalOpen] = useState(false);
+            const [comment, setComment] = useState('');
+
+            const handleComment = () => {
+                onComment(post.id, comment);
+                setComment('');
+                setModalOpen(false);
+            };
+
+            return (
+                <div className="social-post">
+                    <h3>{post.user}</h3>
+                    <p>{post.content}</p>
+                    <p>
+                        <i className="far fa-heart" onClick={() => onLike(post.id)}></i> {post.likes} 
+                        <i className="far fa-comment" onClick={() => setModalOpen(true)}></i> {post.comments.length}
+                    </p>
+                    <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+                        <h2>Comments</h2>
+                        {post.comments.map((comment, index) => (
+                            <p key={index}><strong>{comment.user}:</strong> {comment.text}</p>
+                        ))}
+                        <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Add a comment"></textarea>
+                        <button className="btn" onClick={handleComment}>Post Comment</button>
+                    </Modal>
+                </div>
+            );
+        }
+
+        function PromoItem({ item }) {
+            const [modalOpen, setModalOpen] = useState(false);
+
+            return (
+                <div className="promo-item">
+                    <img src={item.image} alt={item.title} />
+                    <div>
+                        <h3>{item.title}</h3>
+                        <p>{item.description}</p>
+                        <button className="btn" onClick={() => setModalOpen(true)}>Learn More</button>
+                    </div>
+                    <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+                        <h2>{item.title}</h2>
+                        <img src={item.image} alt={item.title} style={{width: '100%', marginBottom: '1rem'}} />
+                        <p>{item.fullDescription}</p>
+                        <p><strong>Price:</strong> {item.price}</p>
+                        <p><strong>Availability:</strong> {item.availability}</p>
+                        <button className="btn">Buy Now</button>
+                    </Modal>
+                </div>
+            );
+        }
+
+        function Ticker({ brands }) {
+            return (
+                <div className="ticker">
+                    <div className="ticker-content">
+                        {brands.map((brand, index) => (
+                            <span key={index} className="ticker-item">
+                                <img src={brand.logo} alt={brand.name} />
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('events');
+            const [events, setEvents] = useState([]);
+            const [location, setLocation] = useState(null);
+            const [trainingModules, setTrainingModules] = useState([]);
+            const [socialPosts, setSocialPosts] = useState([]);
+            const [promoItems, setPromoItems] = useState([]);
+            const [brands, setBrands] = useState([]);
+
+            useEffect(() => {
+                // Initialize map
+                const map = L.map('map').setView([51.505, -0.09], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+                // Simulated geolocation
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const { latitude, longitude } = position.coords;
+                    setLocation({ lat: latitude, lng: longitude });
+                    map.setView([latitude, longitude], 13);
+                    L.marker([latitude, longitude]).addTo(map)
+                        .bindPopup('You are here')
+                        .openPopup();
+
+                    // Simulated nearby events
+                    const simulatedEvents = [
+                        { id: 1, name: 'Yoga in the Park', location: 'Central Park', time: '10:00 AM', lat: latitude + 0.01, lng: longitude + 0.01, description: 'Join us for a relaxing yoga session in the beautiful Central Park.', participants: 15 },
+                        { id: 2, name: 'Group Run', location: 'Riverside', time: '7:00 AM', lat: latitude - 0.01, lng: longitude - 0.01, description: 'Start your day with an invigorating group run along the riverside.', participants: 20 },
+                        { id: 3, name: 'Basketball Game', location: 'Community Center', time: '2:00 PM', lat: latitude + 0.02, lng: longitude - 0.02, description: 'Friendly basketball game at the community center. All skill levels welcome!', participants: 10 },
+                    ];
+
+                    simulatedEvents.forEach(event => {
+                        L.marker([event.lat, event.lng]).addTo(map)
+                            .bindPopup(event.name);
+                    });
+
+                    setEvents(simulatedEvents);
+                });
+
+                // Simulated training modules
+                setTrainingModules([
+                    { id: 1, title: 'Beginner Yoga', description: 'Learn the basics of yoga with our 4-week program.', duration: '4 weeks', difficulty: 'Beginner', equipment: 'Yoga mat', calories: '150-200 per session' },
+                    { id: 2, title: '5K Run Prep', description: 'Get ready for your first 5K with this 8-week training plan.', duration: '8 weeks', difficulty: 'Intermediate', equipment: 'Running shoes', calories: '300-400 per session' },
+                    { id: 3, title: 'HIIT Cardio', description: 'Boost your cardiovascular fitness with high-intensity interval training.', duration: '6 weeks', difficulty: 'Advanced', equipment: 'None', calories: '400-500 per session' },
+                ]);
+
+                // Simulated social posts
+                setSocialPosts([
+                    { 
+                        id: 1, 
+                        user: 'FitnessFanatic', 
+                        content: 'Just completed a 5K run! Personal best time!', 
+                        likes: 15, 
+                        comments: [
+                            {user: 'RunnerGirl', text: 'Congrats! What was your time?'},
+                            {user: 'JoggingJoe', text: 'Great job!'}
+                        ] 
+                    },
+                    { 
+                        id: 2, 
+                        user: 'YogaLover', 
+                        content: 'Morning yoga session to start the day right. Namaste!', 
+                        likes: 20, 
+                        comments: [
+                            {user: 'ZenMaster', text: 'Nothing beats morning yoga!'},
+                            {user: 'FlexibleFred', text: 'Which poses did you do today?'}
+                        ] 
+                    },
+                    { 
+                        id: 3, 
+                        user: 'GymRat', 
+                        content: 'New PR on bench press today! Hard work pays off!', 
+                        likes: 25, 
+                        comments: [
+                            {user: 'IronPump', text: "Beast mode! What's your new PR?"},
+                            {user: 'LiftLife', text: 'Keep pushing those limits!'}
+                        ] 
+                    }
+                ]);
+
+                // Simulated promo items
+                setPromoItems([
+                    { 
+                        id: 1, 
+                        title: 'Nike Running Shoes', 
+                        description: 'Get 20% off on the latest Nike running shoes!', 
+                        image: 'https://example.com/nike-shoes.jpg', 
+                        fullDescription: "Experience the ultimate comfort and performance with Nike's latest running shoes. Featuring responsive cushioning and breathable mesh, these shoes are perfect for both beginners and seasoned runners.", 
+                        price: '$120', 
+                        availability: 'In stock' 
+                    },
+                    { 
+                        id: 2, 
+                        title: 'Protein Shake Mix', 
+                        description: 'Try our new protein shake flavors. Buy one, get one free!', 
+                        image: 'https://example.com/protein-shake.jpg', 
+                        fullDescription: 'Fuel your workouts and recovery with our premium protein shake mix. Available in delicious new flavors including chocolate mint, strawberry banana, and vanilla chai.', 
+                        price: '$29.99', 
+                        availability: 'Limited stock' 
+                    },
+                    { 
+                        id: 3, 
+                        title: 'Yoga Retreat', 
+                        description: 'Join our weekend yoga retreat. Early bird tickets available now!', 
+                        image: 'https://example.com/yoga-retreat.jpg', 
+                        fullDescription: 'Escape the hustle and bustle with our rejuvenating yoga retreat. Enjoy guided meditation, yoga sessions for all levels, healthy meals, and beautiful natural surroundings.', 
+                        price: '$299', 
+                        availability: 'Booking fast' 
+                    }
+                ]);
+
+                // Simulated brand logos
+                setBrands([
+                    { name: 'Nike', logo: 'https://example.com/nike-logo.png' },
+                    { name: 'Adidas', logo: 'https://example.com/adidas-logo.png' },
+                    { name: 'Under Armour', logo: 'https://example.com/under-armour-logo.png' },
+                    { name: 'Reebok', logo: 'https://example.com/reebok-logo.png' },
+                    { name: 'Puma', logo: 'https://example.com/puma-logo.png' },
+                ]);
+            }, []);
+
+            const handleJoinEvent = (eventId) => {
+                setEvents(events.map(event => 
+                    event.id === eventId 
+                        ? { ...event, participants: event.participants + 1 }
+                        : event
+                ));
+                alert(`You've joined the event!`);
+            };
+
+            const handleStartTraining = (moduleId) => {
+                alert(`You've started the training module!`);
+            };
+
+            const handleCreateItem = (formData) => {
+                alert(`New ${formData.type} created: ${formData.title}`);
+            };
+
+            const handleLikePost = (postId) => {
+                setSocialPosts(socialPosts.map(post =>
+                    post.id === postId
+                        ? { ...post, likes: post.likes + 1 }
+                        : post
+                ));
+            };
+
+            const handleCommentPost = (postId, comment) => {
+                setSocialPosts(socialPosts.map(post =>
+                    post.id === postId
+                        ? { ...post, comments: [...post.comments, {user: 'You', text: comment}] }
+                        : post
+                ));
+            };
+
+            return (
+                <div>
+                    <header className="header">
+                        <h1>Fitness Campus</h1>
+                    </header>
+                    <Ticker brands={brands} />
+                    <nav className="nav">
+                        <button className={activeTab === 'events' ? 'active' : ''} onClick={() => setActiveTab('events')}><i className="fas fa-calendar-alt"></i> Events</button>
+                        <button className={activeTab === 'training' ? 'active' : ''} onClick={() => setActiveTab('training')}><i className="fas fa-dumbbell"></i> Training</button>
+                        <button className={activeTab === 'profile' ? 'active' : ''} onClick={() => setActiveTab('profile')}><i className="fas fa-user"></i> Profile</button>
+                        <button className={activeTab === 'create' ? 'active' : ''} onClick={() => setActiveTab('create')}><i className="fas fa-plus"></i> Create</button>
+                        <button className={activeTab === 'social' ? 'active' : ''} onClick={() => setActiveTab('social')}><i className="fas fa-hashtag"></i> FitnessMedia</button>
+                        <button className={activeTab === 'promo' ? 'active' : ''} onClick={() => setActiveTab('promo')}><i className="fas fa-ad"></i> Promo</button>
+                    </nav>
+                    <main className="content">
+                        {activeTab === 'events' && (
+                            <div>
+                                <h2>Nearby Events</h2>
+                                <div id="map"></div>
+                                <ul className="event-list">
+                                    {events.map(event => (
+                                        <EventItem key={event.id} event={event} onJoin={handleJoinEvent} />
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        {activeTab === 'training' && (
+                            <div>
+                                <h2>Training Modules</h2>
+                                {trainingModules.map(module => (
+                                    <TrainingModule key={module.id} module={module} onStart={handleStartTraining} />
+                                ))}
+                            </div>
+                        )}
+                        {activeTab === 'profile' && (
+                            <div className="profile">
+                                <img src="https://i.pravatar.cc/150?img=68" alt="Profile" />
+                                <h2>John Doe</h2>
+                                <p><i className="fas fa-running"></i> Fitness Level: Intermediate</p>
+                                <p><i className="fas fa-trophy"></i> Events Attended: 12</p>
+                                <p><i className="fas fa-graduation-cap"></i> Training Modules Completed: 3</p>
+                                <button className="btn">Edit Profile</button>
+                            </div>
+                        )}
+                        {activeTab === 'create' && (
+                            <div>
+                                <h2>Create New</h2>
+                                <CreateForm onCreate={handleCreateItem} />
+                            </div>
+                        )}
+                        {activeTab === 'social' && (
+                            <div>
+                                <h2>FitnessMedia</h2>
+                                {socialPosts.map(post => (
+                                    <SocialPost key={post.id} post={post} onLike={handleLikePost} onComment={handleCommentPost} />
+                                ))}
+                            </div>
+                        )}
+                        {activeTab === 'promo' && (
+                            <div>
+                                <h2>Promotions</h2>
+                                {promoItems.map(item => (
+                                    <PromoItem key={item.id} item={item} />
+                                ))}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('app'));
+    </script>
+</body>
+</html>
